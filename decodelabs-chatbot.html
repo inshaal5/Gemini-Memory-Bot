@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DecodeLabs AI Chatbot</title>
+<style>
+  :root{
+    --bg: #0b0e14;
+    --panel: #10131b;
+    --header: #10131b;
+    --border: #1f2430;
+    --text: #e7e9ee;
+    --muted: #8b93a7;
+    --muted-2: #5c6478;
+    --accent: #6ea8fe;
+    --accent-2: #7ee787;
+    --card-bg: #12161f;
+    --bubble-user: #1e2a44;
+    --bubble-bot: #151923;
+    --danger: #ff6b6b;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+    overflow:hidden;
+  }
+
+  /* Header */
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 20px;
+    background:var(--header);
+    border-bottom:1px solid var(--border);
+    flex-shrink:0;
+  }
+  .header-left{display:flex;align-items:center;gap:12px;}
+  .bot-avatar{
+    width:36px;height:36px;border-radius:10px;
+    background:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;
+    flex-shrink:0;
+  }
+  .header-title{font-weight:600;font-size:16px;letter-spacing:.2px;}
+  .header-right{display:flex;align-items:center;gap:10px;}
+  .pill{
+    font-size:12px;
+    color:var(--muted);
+    background:var(--panel);
+    border:1px solid var(--border);
+    padding:6px 12px;
+    border-radius:999px;
+    white-space:nowrap;
+  }
+  .btn{
+    display:flex;align-items:center;gap:6px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:7px 14px;
+    border-radius:999px;
+    font-size:13px;
+    cursor:pointer;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .btn:hover{background:#171b26;border-color:#2a3140;}
+  .icon-btn{
+    width:34px;height:34px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--panel);
+    border:1px solid var(--border);
+    color:var(--muted);
+    cursor:pointer;
+    font-size:15px;
+  }
+  .icon-btn:hover{color:var(--text);border-color:#2a3140;}
+
+  /* Main scroll area */
+  main{
+    flex:1;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .welcome{
+    margin:auto;
+    text-align:center;
+    max-width:700px;
+    padding:40px 20px;
+  }
+  .welcome-avatar{
+    width:64px;height:64px;border-radius:16px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+    font-size:30px;
+    margin:0 auto 24px;
+  }
+  .welcome h1{
+    font-size:28px;
+    margin:0 0 14px;
+    font-weight:700;
+  }
+  .welcome p{
+    color:var(--muted);
+    font-size:15px;
+    line-height:1.6;
+    margin:0 0 32px;
+  }
+  .suggestions{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:14px;
+  }
+  @media (max-width:640px){
+    .suggestions{grid-template-columns:1fr;}
+    .welcome h1{font-size:22px;}
+  }
+  .sugg-card{
+    background:var(--card-bg);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:16px;
+    text-align:left;
+    cursor:pointer;
+    transition:border-color .15s ease, transform .1s ease;
+  }
+  .sugg-card:hover{border-color:#333c50;transform:translateY(-1px);}
+  .sugg-icon{font-size:18px;margin-bottom:10px;}
+  .sugg-title{font-weight:600;font-size:14px;margin-bottom:6px;}
+  .sugg-desc{color:var(--muted);font-size:12.5px;line-height:1.5;}
+
+  /* Chat area */
+  .chat{
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+    padding:24px 16px 12px;
+    max-width:820px;
+    width:100%;
+    margin:0 auto;
+  }
+  .msg-row{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+  }
+  .msg-row.user{
+    flex-direction:row-reverse;
+  }
+  .msg-avatar{
+    width:30px;height:30px;border-radius:8px;
+    flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    font-size:14px;
+    background:var(--panel);
+    border:1px solid var(--border);
+  }
+  .msg-row.user .msg-avatar{background:var(--bubble-user);border-color:#2b3a5c;}
+  .bubble{
+    max-width:78%;
+    padding:12px 16px;
+    border-radius:14px;
+    font-size:14.5px;
+    line-height:1.55;
+    white-space:pre-wrap;
+    word-wrap:break-word;
+  }
+  .msg-row.bot .bubble{
+    background:var(--bubble-bot);
+    border:1px solid var(--border);
+    border-top-left-radius:4px;
+  }
+  .msg-row.user .bubble{
+    background:var(--bubble-user);
+    border:1px solid #2b3a5c;
+    border-top-right-radius:4px;
+  }
+  .typing{display:flex;gap:4px;padding:4px 0;}
+  .typing span{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--muted);
+    animation:blink 1.2s infinite ease-in-out;
+  }
+  .typing span:nth-child(2){animation-delay:.2s;}
+  .typing span:nth-child(3){animation-delay:.4s;}
+  @keyframes blink{0%,80%,100%{opacity:.25;}40%{opacity:1;}}
+
+  .error-bubble{
+    border-color:rgba(255,107,107,.4) !important;
+    color:#ffb3b3;
+  }
+
+  /* Footer / input */
+  footer{
+    flex-shrink:0;
+    padding:14px 16px 10px;
+    background:var(--bg);
+    border-top:1px solid var(--border);
+  }
+  .input-wrap{
+    max-width:820px;
+    margin:0 auto;
+    display:flex;
+    align-items:flex-end;
+    gap:10px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:8px 8px 8px 18px;
+  }
+  .input-wrap:focus-within{border-color:#3a4256;}
+  textarea#composer{
+    flex:1;
+    resize:none;
+    background:transparent;
+    border:none;
+    outline:none;
+    color:var(--text);
+    font-size:14.5px;
+    font-family:inherit;
+    line-height:1.5;
+    max-height:140px;
+    padding:8px 0;
+  }
+  textarea#composer::placeholder{color:var(--muted-2);}
+  .send-btn{
+    width:38px;height:38px;border-radius:50%;
+    background:#232838;
+    border:none;
+    color:var(--muted);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    flex-shrink:0;
+    font-size:15px;
+    transition:background .15s ease,color .15s ease;
+  }
+  .send-btn.active{background:var(--accent);color:#0b0e14;}
+  .send-btn:disabled{cursor:not-allowed;}
+  .disclaimer{
+    text-align:center;
+    color:var(--muted-2);
+    font-size:11.5px;
+    margin-top:10px;
+  }
+  .disclaimer a{color:var(--muted);cursor:pointer;text-decoration:underline;}
+
+  /* Modal for API key */
+  .modal-overlay{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.6);
+    display:flex;align-items:center;justify-content:center;
+    z-index:50;
+    padding:20px;
+  }
+  .modal{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:24px;
+    width:100%;
+    max-width:400px;
+  }
+  .modal h2{margin:0 0 8px;font-size:18px;}
+  .modal p{color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 16px;}
+  .modal input{
+    width:100%;
+    background:#0b0e14;
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:11px 12px;
+    color:var(--text);
+    font-size:14px;
+    outline:none;
+    margin-bottom:14px;
+  }
+  .modal input:focus{border-color:var(--accent);}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;}
+  .modal a{color:var(--accent);}
+  .link-btn{background:none;border:none;color:var(--muted);font-size:12.5px;cursor:pointer;text-decoration:underline;padding:0;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="bot-avatar">🤖</div>
+    <div class="header-title">DecodeLabs AI Chatbot</div>
+  </div>
+  <div class="header-right">
+    <div class="pill" id="msgCountPill">0 messages in memory</div>
+    <button class="btn" id="newChatBtn">＋ New Chat</button>
+    <div class="icon-btn" id="settingsBtn" title="API Key settings">⚙️</div>
+  </div>
+</header>
+
+<main id="main">
+  <div class="welcome" id="welcomeScreen">
+    <div class="welcome-avatar">🤖</div>
+    <h1>How can I help you learn today?</h1>
+    <p>I'm your DecodeLabs AI assistant. I can explain complex technical concepts, help debug code, or guide you through Generative AI.</p>
+    <div class="suggestions">
+      <div class="sugg-card" data-prompt="Explain machine learning simply, as if I'm a beginner.">
+        <div class="sugg-icon">✨</div>
+        <div class="sugg-title">What is machine learning?</div>
+        <div class="sugg-desc">Explain machine learning simply, as if I'm a beginner.</div>
+      </div>
+      <div class="sugg-card" data-prompt="What is an API and how do they work in web development?">
+        <div class="sugg-icon">&lt;/&gt;</div>
+        <div class="sugg-title">Explain APIs simply</div>
+        <div class="sugg-desc">What is an API and how do they work in web development?</div>
+      </div>
+      <div class="sugg-card" data-prompt="Can you give me examples of for loops and while loops in Python?">
+        <div class="sugg-icon">▶</div>
+        <div class="sugg-title">Help me understand Python loops</div>
+        <div class="sugg-desc">Can you give me examples of for loops and while loops in Python?</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chat" id="chatArea" style="display:none;"></div>
+</main>
+
+<footer>
+  <div class="input-wrap">
+    <textarea id="composer" placeholder="Ask me anything... (Shift+Enter for newline)" rows="1"></textarea>
+    <button class="send-btn" id="sendBtn" disabled>➤</button>
+  </div>
+  <div class="disclaimer">
+    DecodeLabs AI can make mistakes. Consider verifying important information. ·
+    <a id="apiKeyLink">Set Gemini API key</a>
+  </div>
+</footer>
+
+<!-- API Key modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2>Add your Gemini API key</h2>
+    <p>
+      This app calls the Google Gemini API directly from your browser. Your key is kept only in this page's memory for the current session — it is never saved or sent anywhere else.
+      Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>.
+    </p>
+    <input type="password" id="apiKeyInput" placeholder="Paste your Gemini API key here" autocomplete="off">
+    <div class="modal-actions">
+      <button class="link-btn" id="modalCancel">Cancel</button>
+      <button class="btn" id="modalSave">Save key</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---- State ----
+  let apiKey = "";                 // kept in memory only, per session
+  const MODEL = "gemini-2.0-flash";
+  const MAX_TURNS = 20;            // sliding window: keep last N user+model turn pairs
+  let history = [];                // [{role:'user'|'model', parts:[{text}]}]
+
+  // ---- Elements ----
+  const welcomeScreen = document.getElementById('welcomeScreen');
+  const chatArea = document.getElementById('chatArea');
+  const composer = document.getElementById('composer');
+  const sendBtn = document.getElementById('sendBtn');
+  const msgCountPill = document.getElementById('msgCountPill');
+  const newChatBtn = document.getElementById('newChatBtn');
+  const main = document.getElementById('main');
+
+  const modalOverlay = document.getElementById('modalOverlay');
+  const apiKeyInput = document.getElementById('apiKeyInput');
+  const modalSave = document.getElementById('modalSave');
+  const modalCancel = document.getElementById('modalCancel');
+  const settingsBtn = document.getElementById('settingsBtn');
+  const apiKeyLink = document.getElementById('apiKeyLink');
+
+  function openModal(){
+    apiKeyInput.value = apiKey;
+    modalOverlay.style.display = 'flex';
+    setTimeout(()=>apiKeyInput.focus(), 50);
+  }
+  function closeModal(){ modalOverlay.style.display = 'none'; }
+
+  // Show modal on first load since no key is set yet
+  openModal();
+
+  settingsBtn.addEventListener('click', openModal);
+  apiKeyLink.addEventListener('click', openModal);
+  modalCancel.addEventListener('click', closeModal);
+  modalOverlay.addEventListener('click', (e)=>{ if(e.target === modalOverlay) closeModal(); });
+  modalSave.addEventListener('click', ()=>{
+    const val = apiKeyInput.value.trim();
+    if(!val){ apiKeyInput.focus(); return; }
+    apiKey = val;
+    closeModal();
+  });
+  apiKeyInput.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){ modalSave.click(); }
+  });
+
+  // ---- Suggestion cards ----
+  document.querySelectorAll('.sugg-card').forEach(card=>{
+    card.addEventListener('click', ()=>{
+      composer.value = card.dataset.prompt;
+      updateSendState();
+      sendMessage();
+    });
+  });
+
+  // ---- Composer behavior ----
+  function autoGrow(){
+    composer.style.height = 'auto';
+    composer.style.height = Math.min(composer.scrollHeight, 140) + 'px';
+  }
+  function updateSendState(){
+    const has = composer.value.trim().length > 0;
+    sendBtn.disabled = !has;
+    sendBtn.classList.toggle('active', has);
+  }
+  composer.addEventListener('input', ()=>{ autoGrow(); updateSendState(); });
+  composer.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+  sendBtn.addEventListener('click', sendMessage);
+
+  newChatBtn.addEventListener('click', ()=>{
+    history = [];
+    chatArea.innerHTML = '';
+    chatArea.style.display = 'none';
+    welcomeScreen.style.display = '';
+    updateMsgCount();
+  });
+
+  function updateMsgCount(){
+    msgCountPill.textContent = history.length + ' message' + (history.length===1?'':'s') + ' in memory';
+  }
+
+  // ---- Rendering ----
+  function renderMessage(role, text){
+    const row = document.createElement('div');
+    row.className = 'msg-row ' + (role === 'user' ? 'user' : 'bot');
+
+    const avatar = document.createElement('div');
+    avatar.className = 'msg-avatar';
+    avatar.textContent = role === 'user' ? '🙂' : '🤖';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = text;
+
+    row.appendChild(avatar);
+    row.appendChild(bubble);
+    chatArea.appendChild(row);
+    main.scrollTop = main.scrollHeight;
+    return bubble;
+  }
+
+  function renderTyping(){
+    const row = document.createElement('div');
+    row.className = 'msg-row bot';
+    row.id = 'typingRow';
+    const avatar = document.createElement('div');
+    avatar.className = 'msg-avatar';
+    avatar.textContent = '🤖';
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble typing';
+    bubble.innerHTML = '<span></span><span></span><span></span>';
+    row.appendChild(avatar);
+    row.appendChild(bubble);
+    chatArea.appendChild(row);
+    main.scrollTop = main.scrollHeight;
+  }
+  function removeTyping(){
+    const row = document.getElementById('typingRow');
+    if(row) row.remove();
+  }
+
+  // ---- Send flow ----
+  async function sendMessage(){
+    const text = composer.value.trim();
+    if(!text) return;
+
+    if(!apiKey){
+      openModal();
+      return;
+    }
+
+    // First message: switch from welcome screen to chat view
+    if(welcomeScreen.style.display !== 'none'){
+      welcomeScreen.style.display = 'none';
+      chatArea.style.display = 'flex';
+    }
+
+    // 1. Ingest & append user input
+    composer.value = '';
+    autoGrow();
+    updateSendState();
+    renderMessage('user', text);
+    history.push({ role: 'user', parts: [{ text }] });
+    slideWindow();
+    updateMsgCount();
+
+    renderTyping();
+    sendBtn.disabled = true;
+
+    try{
+      const reply = await callGemini(history);
+      removeTyping();
+      renderMessage('model', reply);
+      history.push({ role: 'model', parts: [{ text: reply }] });
+      slideWindow();
+      updateMsgCount();
+    }catch(err){
+      removeTyping();
+      const bubble = renderMessage('model', 'Something went wrong: ' + err.message);
+      bubble.classList.add('error-bubble');
+    }finally{
+      updateSendState();
+      composer.focus();
+    }
+  }
+
+  // 2. Transmit & record -> call the GenAI API with the full history payload
+  async function callGemini(historyPayload){
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: historyPayload })
+    });
+
+    if(!res.ok){
+      let detail = '';
+      try{ const errJson = await res.json(); detail = errJson?.error?.message || ''; }catch(e){}
+      throw new Error(`API error ${res.status}${detail ? ' — ' + detail : ''}`);
+    }
+
+    const data = await res.json();
+    const parts = data?.candidates?.[0]?.content?.parts;
+    if(!parts || !parts.length){
+      throw new Error('No response returned by the model.');
+    }
+    return parts.map(p => p.text || '').join('').trim() || '(empty response)';
+  }
+
+  // Sliding window: keep only the most recent MAX_TURNS*2 entries (FIFO pruning)
+  function slideWindow(){
+    const maxEntries = MAX_TURNS * 2;
+    if(history.length > maxEntries){
+      history = history.slice(history.length - maxEntries);
+    }
+  }
+
+  updateSendState();
+})();
+</script>
+</body>
+</html>
